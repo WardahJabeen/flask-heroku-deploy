@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <h1>Dashboard</h1>
+    {% for plot in plots %}
+    <div>{{ plot|safe }}</div>
+    {% endfor %}
+</body>
+
+</html>
