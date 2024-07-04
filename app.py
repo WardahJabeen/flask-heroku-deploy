@@ -1,74 +1,71 @@
 from flask import Flask, render_template
-# from urllib.parse import quote as url_quote  # Replace url_quote import
-
 import requests
 import json
-import plotly.graph_objs as go
-from plotly.subplots import make_subplots
-import plotly.express as px
-import plotly.io as pio
-import requests
 import matplotlib.pyplot as plt
-import json
 from matplotlib.ticker import MaxNLocator
 from io import BytesIO
 import base64
 
 app = Flask(__name__)
 
-# url to fetch data
+# URL to fetch data
 url = "https://portkey-2a1ae-default-rtdb.firebaseio.com/playtesting1_analytics.json"
 
-# fetch the data from the firebase 
+# Fetch the data from the Firebase
 def fetch_data(url):
     response = requests.get(url)
     data = response.json()
     return data
 
-# fetch the data
+# Fetch the data
 data = fetch_data(url)
+print("Fetched Data:", data)  # Debug statement to print fetched data
 
-
-# parse and use the data
+# Parse and use the data
 def parse_data(data, metric_left, metric_right):
     level_data = {}
     for player in data.values():
-        level = int(player['level'])   #int
-        value_left = player[metric_left]
-        value_right = player[metric_right]
+        try:
+            level = int(player['level'])   # int
+            value_left = player[metric_left]
+            value_right = player[metric_right]
         
-        if level not in level_data:
-            level_data[level] = {'left': 0, 'right': 0, 'count': 0}
+            if level not in level_data:
+                level_data[level] = {'left': 0, 'right': 0, 'count': 0}
         
-        level_data[level]['left'] += value_left
-        level_data[level]['right'] += value_right
-        level_data[level]['count'] += 1
+            level_data[level]['left'] += value_left
+            level_data[level]['right'] += value_right
+            level_data[level]['count'] += 1
+        except KeyError as e:
+            print(f"KeyError: {e} - This player data is missing expected keys.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
 
-    # calculate the averages
+    # Calculate the averages
     levels = sorted(level_data.keys())
     average_left = [level_data[level]['left'] / level_data[level]['count'] for level in levels]
     average_right = [level_data[level]['right'] / level_data[level]['count'] for level in levels]
 
     return levels, average_left, average_right
 
-# plot
+# Plot
 def create_plot(levels, average_left, average_right, xlabel, ylabel, title, left_label, right_label):
     fig, ax = plt.subplots()
     bar_width = 0.3
-    # stack
+    # Stack
     p1 = ax.bar(levels, average_left, bar_width, label=left_label)
     p2 = ax.bar(levels, average_right, bar_width, bottom=average_left, label=right_label)
 
-    # labels and titles for axis and graph
+    # Labels and titles for axis and graph
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     ax.set_xticks(levels)
     ax.legend()
 
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True)) #int
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))  # int
 
-    # text annotations
+    # Text annotations
     for level, left, right in zip(levels, average_left, average_right):
         if left > 0:
             ax.text(level, left / 2, f'{left:.2f}', ha='center', va='center', color='white')
@@ -81,43 +78,30 @@ def create_plot(levels, average_left, average_right, xlabel, ylabel, title, left
     plot_url = base64.b64encode(img.getvalue()).decode('utf8')
     plt.close(fig)
     return plot_url
-    
 
-
-# metric 2 - Level Completion Reason
-# levels, collisions, time_ups = parse_data(data, 'reasonforFinshingLevel', 'reasonforFinshingLevel')
-# plot(levels, collisions, time_ups, 'Levels', 'Total Number of Game Completions', 'Level Completion Reason', 'Collision', 'Time Up')
-
-# metric 1 - Scores Collected per Level
-
-# metric 3 - Usage of Control-Flipping Props
-# levels, average_props_left, average_props_right = parse_data(data, 'totalCtrlSwitchPropCollectedLeft', 'totalCtrlSwitchPropCollectedRight')
-# create_plot(levels, average_props_left, average_props_right, 'Levels', 'Average Control-Flipping Props', 'Usage of Control-Flipping Props', 'Props Left', 'Props Right')
-
-# # metric 4 - Collisions after Control-Flip per Level
-# levels, average_collisions_left, average_collisions_right = parse_data(data, 'collisionDueToCtrlFlipLeft', 'collisionDueToCtrlFlipRight')
-# create_plot(levels, average_collisions_left, average_collisions_right, 'Levels', 'Average Number of Obstacle Collisions', 'Collisions after Control-Flip per Level', 'Collisions Left', 'Collisions Right')
-
-
-
-# Metric 2
+# Metric 2 - Level Completion Reason
 # Function to fetch and parse data for the first plot
 def fetch_and_parse_data_2():
-    # parse the data
+    # Parse the data
     level_data = {}
     for player in data.values():
-        level = int(player['level'])
-        reason = player['reasonforFinshingLevel']
+        try:
+            level = int(player['level'])
+            reason = player['reasonforFinshingLevel']
 
-        if level not in level_data:
-            level_data[level] = {'collision': 0, 'time_up': 0}
+            if level not in level_data:
+                level_data[level] = {'collision': 0, 'time_up': 0}
 
-        if reason == 1:
-            level_data[level]['collision'] += 1
-        elif reason == 2:
-            level_data[level]['time_up'] += 1
+            if reason == 1:
+                level_data[level]['collision'] += 1
+            elif reason == 2:
+                level_data[level]['time_up'] += 1
+        except KeyError as e:
+            print(f"KeyError: {e} - This player data is missing expected keys.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
 
-    # helper variables
+    # Helper variables
     levels = sorted(level_data.keys())
     collisions = [level_data[level]['collision'] for level in levels]
     time_ups = [level_data[level]['time_up'] for level in levels]
@@ -131,7 +115,7 @@ def create_plot_2(levels, collisions, time_ups):
     p1 = ax.bar(levels, collisions, bar_width, label='Collision')
     p2 = ax.bar(levels, time_ups, bar_width, bottom=collisions, label='Time Up')
 
-    # labels and title on the graph
+    # Labels and title on the graph
     ax.set_xlabel('Levels')
     ax.set_ylabel('Total Number of Game Completions')
     ax.set_title('Level Completion Reason')
@@ -151,7 +135,6 @@ def create_plot_2(levels, collisions, time_ups):
     plot_url = base64.b64encode(img.getvalue()).decode('utf8')
     plt.close(fig)
     return plot_url
-
 
 @app.route('/')
 def index():
@@ -181,5 +164,3 @@ def index():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
