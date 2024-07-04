@@ -1,16 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
     <title>Dashboard</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 
 <body>
     <h1>Dashboard</h1>
-    {% for plot in plots %}
-    <div>{{ plot|safe }}</div>
-    {% endfor %}
+
+    <div>
+        <h2>Metric 1: Scores Collected per Level</h2>
+        <img src="{{ plots[0] }}" alt="Scores Collected per Level">
+    </div>
+
+    <div>
+        <h2>Metric 2: Level Completion Reason</h2>
+        <img src="{{ plots[1] }}" alt="Level Completion Reason">
+    </div>
+
+    <div>
+        <h2>Metric 3: Usage of Control-Flipping Props</h2>
+        <img src="{{ plots[2] }}" alt="Usage of Control-Flipping Props">
+    </div>
+
+    <div>
+        <h2>Metric 4: Collisions after Control-Flip per Level</h2>
+        <img src="{{ plots[3] }}" alt="Collisions after Control-Flip per Level">
+    </div>
 </body>
 
 </html>
