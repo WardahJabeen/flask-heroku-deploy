@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from urllib.parse import quote as url_quote  # Replace url_quote import
 import requests
 import json
 import plotly.graph_objs as go
